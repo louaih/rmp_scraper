@@ -1,0 +1,6 @@
+.env
+.venv
+*.json
+*.csv
+professor_ratings.json
+professor_ratings.csv 
