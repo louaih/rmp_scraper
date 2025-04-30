@@ -67,9 +67,9 @@ This tool helps students make informed decisions about their course selections b
   {
     "course_code": "CS-UY 2124",
     "professor_name": "John Sterling",
-    "number_of_reviews": 42,
-    "average_quality": 4.8,
-    "average_difficulty": 3.2,
+    "number_of_reviews": 20,
+    "average_quality": 3.3,
+    "average_difficulty": 4.3,
     "analysis": "The professor, Sterling, receives mixed feedback from students. While many appreciate his deep knowledge and effective teaching style, there are recurring concerns about his rudeness and strict grading policies. Students feel that participating and asking questions are crucial to succeeding in his class, but they also mention feeling intimidated and disrespected at times. The difficulty of the course is consistently noted, with exams heavily weighted and minor errors resulting in significant point deductions. Some students find his teaching methods outdated, while others appreciate his dedication to teaching C++ and OOP concepts. Overall, opinions vary on Professor Sterling, with some students praising his expertise and others criticizing his interpersonal skills and grading approach. Students are advised to prepare thoroughly and actively engage to succeed in his challenging class."
   }
 ]
