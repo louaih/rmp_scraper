@@ -47,15 +47,13 @@ This tool helps students make informed decisions about their course selections b
   {
     "course_code": "CS-UY 2124",
     "course_name": "Course CS-UY 2124",
-    "professor_name": "John Sterling at NYU Tandon School of Engineering",
-    "department": "Computer Science department at NYU...",
+    "professor_name": "John Sterling at NYU Tandon School of Engineering | Rate My ...",
     "url": "https://www.ratemyprofessors.com/professor/125789"
   },
   {
     "course_code": "CS-UY 2124",
     "course_name": "Course CS-UY 2124",
-    "professor_name": "Eugene Callahan at NYU Tandon School of Engineering",
-    "department": "Computer Science department at NYU...",
+    "professor_name": "Eugene Callahan at NYU Tandon School of Engineering | Rate My ...",
     "url": "https://www.ratemyprofessors.com/professor/2220934"
   }
 ]

@@ -35,12 +35,13 @@ class RMPScraper:
         return code.split('-')[0] + code.split()[-1]
 
     def google_search(self, course_code):
-        formatted_code = self.format_course_code(course_code)
         no_space_code = "".join(course_code.split())
         foo = course_code.split('-')
         no_hyphen_code = foo[0] + "".join(foo[1:])
         no_space_no_hyphen_code = foo[0]+"".join(foo[1].split())
-        query = f'site:ratemyprofessors.com ("{formatted_code}" OR "{course_code}" OR "{no_space_code}" OR "{no_hyphen_code}" OR "{no_space_no_hyphen_code}") ("NYU" OR "New York University")'
+        no_space_no_hyphen_no_ua_code = foo[0] + course_code.split()[-1]
+        # TODO: Remove hardcoded NYU
+        query = f'site:ratemyprofessors.com ("{course_code}" OR "{no_space_code}" OR "{no_hyphen_code}" OR "{no_space_no_hyphen_code}" OR "{no_space_no_hyphen_no_ua_code}") ("NYU" OR "New York University")'
         print(query)
         url = "https://www.googleapis.com/customsearch/v1"
         params = {
@@ -74,8 +75,7 @@ class RMPScraper:
                 professors.append({
                     'course_code': course_code,
                     'course_name': course_name,
-                    'professor_name': item['title'],
-                    'department': item['snippet'],
+                    'professor_name': " ".join(item['title'].split(' ')[:2]),
                     'url': item['link']
                 })
         return professors
@@ -89,7 +89,7 @@ class RMPScraper:
             if "NYU" in prof['professor_name'] or "New York University" in prof['professor_name']:
                 nyu_professors.append(prof)
             else:
-                print(f"Skipping non-NYU professor: {prof['professor_name']} ({prof['department']})")
+                print(f"Skipping non-NYU professor: {prof['professor_name']}")
         
         return nyu_professors
 
