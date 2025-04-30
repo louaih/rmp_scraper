@@ -1,6 +1,24 @@
+# Environment files
 .env
-.venv
+.venv/
+__pycache__/
+*.pyc
+
+# Output files
 *.json
 *.csv
+!courses.txt  # Keep this input file
+!requirements.txt  # Keep this dependency file
+
+# Log files
+*.log
+scraper.log
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
 professor_ratings.json
 professor_ratings.csv 

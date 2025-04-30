@@ -1,55 +1,76 @@
-# RateMyProfessor Course Scraper
+# Course Professor Review Analyzer
 
-This tool uses Google Custom Search API to find RateMyProfessor.com ratings for professors teaching specific NYU courses.
+This tool helps students make informed decisions about their course selections by analyzing RateMyProfessors reviews for professors teaching specific courses. It provides a comprehensive overview of teaching quality, course difficulty, and student feedback for each professor.
 
-## Prerequisites
+## Features
 
-- Python 3.7+
-- Google Cloud API key
-- Google Custom Search Engine ID
-- pip (Python package installer)
-
-## Installation
-
-1. Clone this repository or download the files
-2. Install the required packages:
-```bash
-pip install -r requirements.txt
-```
-3. Create a `.env` file in the project root with your API credentials:
-```
-GOOGLE_CLOUD_API_KEY=your_api_key_here
-GOOGLE_SEARCH_ENGINE_ID=your_search_engine_id_here
-```
+- Scrapes reviews from RateMyProfessors for specified courses
+- Analyzes teaching quality and course difficulty ratings
+- Generates AI-powered summaries of student feedback
+- Organizes results by course code for easy comparison
+- Outputs results in both JSON and CSV formats
 
 ## Usage
 
-Simply run the scraper script:
-```bash
-python scraper.py
-```
+1. **Setup**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-The script will:
-1. Search for professors teaching each course using Google Custom Search API
-2. Filter results to only include NYU professors
-3. Save the results to both `professor_ratings.csv` and `professor_ratings.json`
+2. **Provide Course Codes**:
+   You can specify courses in two ways:
+   - Command line arguments:
+     ```bash
+     python main.py "CS-UY 2124" "CS-UY 1114"
+     ```
+   - Or create a `courses.txt` file with one course code per line:
+     ```
+     CS-UY 2124
+     CS-UY 1114
+     ```
 
-## Output
+3. **Run the Analyzer**:
+   ```bash
+   python main.py
+   ```
 
-The script generates two files:
-1. `professor_ratings.csv` with the following columns:
-   - course_code: The course code (e.g., "ANTH-UA 326")
-   - course_name: The name of the course
-   - professor_name: Name of the professor
-   - department: Department the professor belongs to
-   - url: Link to the professor's RateMyProfessor page
+4. **View Results**:
+   - Open `course_professor_analyses.json` in VS Code (enable word wrap with Alt+Z)
+   - Or view `course_professor_analyses.csv` in Excel/Google Sheets
+   - Check `scraper.log` for detailed processing information
 
-2. `professor_ratings.json` containing the same data in JSON format for better readability
+## Output Format
 
-## Note
+The tool generates two output files:
+- `course_professor_analyses.json`: Detailed analysis with word-wrapped text
+- `course_professor_analyses.csv`: Tabular format for easy sorting/filtering
 
-- The script uses Google Custom Search API to find relevant RateMyProfessor pages
-- It includes a 3-second delay between course searches to respect API rate limits
-- Results are filtered to only include NYU professors
-- Make sure you have a stable internet connection while running the script
-- The script saves progress after each course in case of interruption 
+Each analysis includes:
+- Course code
+- Professor name
+- Number of reviews
+- Average quality rating
+- Average difficulty rating
+- AI-generated summary of student feedback
+
+## Requirements
+
+- Python 3.8+
+- Selenium
+- OpenAI API key (for review analysis)
+- Firefox browser (for web scraping)
+
+## Notes
+
+- The tool respects RateMyProfessors' rate limits
+- Results are cached to avoid repeated scraping
+- Analysis requires a valid OpenAI API key with available quota
+- Word wrap in VS Code (Alt+Z) makes the JSON output more readable
+
+## Project Structure
+
+- `main.py`: Main script for processing courses
+- `review_scraper.py`: Core scraping and analysis functionality
+- `professor_ratings.csv`: Database of professor URLs
+- `courses.txt`: Optional input file for course codes
+- `requirements.txt`: Python dependencies 
