@@ -63,7 +63,7 @@ rmp_scraper/
 
 ## Sample Output
 
-### Professor Finder Output (professor_ratings.json)
+### Professor Finder Output (professors.json)
 ```json
 [
   {
