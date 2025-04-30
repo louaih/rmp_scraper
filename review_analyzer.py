@@ -282,7 +282,7 @@ class ReviewScraper:
     def process_all_professors(self):
         """Process all professors from the CSV file"""
         try:
-            df = pd.read_csv('professor_ratings.csv')
+            df = pd.read_csv('professors.csv')
             results = []
             
             for _, row in df.iterrows():

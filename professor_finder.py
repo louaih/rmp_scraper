@@ -75,7 +75,7 @@ class RMPScraper:
                 professors.append({
                     'course_code': course_code,
                     'course_name': course_name,
-                    'professor_name': " ".join(item['title'].split(' ')[:2]),
+                    'professor_name': item['title'],
                     'url': item['link']
                 })
         return professors
@@ -98,22 +98,25 @@ class RMPScraper:
         
         for code, name in self.courses.items():
             results = self.scrape_course(code, name)
-            # Filter for NYU professors only
+            # Filter for NYU professors only and clean up professor names
             nyu_results = self.filter_nyu_professors(results)
+            for prof in nyu_results:
+                name_parts = prof['professor_name'].split()
+                prof['professor_name'] = f"{name_parts[0]} {name_parts[1]}"
             all_results.extend(nyu_results)
             
             # Save after each course in case of interruption
             df = pd.DataFrame(all_results)
-            df.to_csv('professor_ratings.csv', index=False)
+            df.to_csv('professors.csv', index=False)
             
             time.sleep(3)  # Delay between courses
         
-        print("\nFinal results saved to professor_ratings.csv")
+        print("\nFinal results saved to professors.csv")
         
         # Also save as JSON for better readability
-        with open('professor_ratings.json', 'w', encoding='utf-8') as f:
+        with open('professors.json', 'w', encoding='utf-8') as f:
             json.dump(all_results, f, ensure_ascii=False, indent=2)
-        print("Detailed results saved to professor_ratings.json")
+        print("Detailed results saved to professors.json")
 
 if __name__ == "__main__":
     scraper = RMPScraper()

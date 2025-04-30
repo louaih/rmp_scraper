@@ -47,13 +47,13 @@ This tool helps students make informed decisions about their course selections b
   {
     "course_code": "CS-UY 2124",
     "course_name": "Course CS-UY 2124",
-    "professor_name": "John Sterling at NYU Tandon School of Engineering | Rate My ...",
+    "professor_name": "John Sterling",
     "url": "https://www.ratemyprofessors.com/professor/125789"
   },
   {
     "course_code": "CS-UY 2124",
     "course_name": "Course CS-UY 2124",
-    "professor_name": "Eugene Callahan at NYU Tandon School of Engineering | Rate My ...",
+    "professor_name": "Eugene Callahan",
     "url": "https://www.ratemyprofessors.com/professor/2220934"
   }
 ]
@@ -75,9 +75,13 @@ This tool helps students make informed decisions about their course selections b
 
 ## Output Format
 
-The tool generates two output files:
-- `course_professor_analyses.json`
-- `course_professor_analyses.csv`
+The tool generates four output files:
+- `course_professor_analyses.json` <-- This is most useful to you
+- `course_professor_analyses.csv` <-- CSV just in case you wanted to view in Excel/Sheets
+- `professors.json`
+- `professors.csv`
+
+
 
 Each analysis includes:
 - Course code

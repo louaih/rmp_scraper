@@ -47,7 +47,7 @@ def main():
         finder = RMPScraper()
         finder.courses = {code: f"Course {code}" for code in course_codes}  # Update courses to search
         finder.scrape_all_courses()
-        logging.info("Successfully found professors and saved to professor_ratings.csv")
+        logging.info("Successfully found professors and saved to professors.csv")
         
         # Step 2: Analyze reviews using review_analyzer
         logging.info("Step 2: Analyzing professor reviews...")
@@ -59,7 +59,7 @@ def main():
             logging.info(f"Processing course: {course_code}")
             try:
                 # Get professors for this course
-                professors_df = pd.read_csv('professor_ratings.csv')
+                professors_df = pd.read_csv('professors.csv')
                 course_professors = professors_df[professors_df['course_code'] == course_code]
                 
                 if course_professors.empty:
