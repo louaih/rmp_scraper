@@ -37,13 +37,49 @@ This tool helps students make informed decisions about their course selections b
 4. **View Results**:
    - Open `course_professor_analyses.json` in VS Code (enable word wrap with Alt+Z)
    - Or view `course_professor_analyses.csv` in Excel/Google Sheets
-   - Check `scraper.log` for detailed processing information
+   - Check console for logs and troubleshooting information
+
+## Sample Output
+
+### Professor Finder Output (professor_ratings.json)
+```json
+[
+  {
+    "course_code": "CS-UY 2124",
+    "course_name": "Course CS-UY 2124",
+    "professor_name": "John Sterling at NYU Tandon School of Engineering",
+    "department": "Computer Science department at NYU...",
+    "url": "https://www.ratemyprofessors.com/professor/125789"
+  },
+  {
+    "course_code": "CS-UY 2124",
+    "course_name": "Course CS-UY 2124",
+    "professor_name": "Eugene Callahan at NYU Tandon School of Engineering",
+    "department": "Computer Science department at NYU...",
+    "url": "https://www.ratemyprofessors.com/professor/2220934"
+  }
+]
+```
+
+### Review Analyzer Output (course_professor_analyses.json)
+```json
+[
+  {
+    "course_code": "CS-UY 2124",
+    "professor_name": "John Sterling",
+    "number_of_reviews": 42,
+    "average_quality": 4.8,
+    "average_difficulty": 3.2,
+    "analysis": "The professor, Sterling, receives mixed feedback from students. While many appreciate his deep knowledge and effective teaching style, there are recurring concerns about his rudeness and strict grading policies. Students feel that participating and asking questions are crucial to succeeding in his class, but they also mention feeling intimidated and disrespected at times. The difficulty of the course is consistently noted, with exams heavily weighted and minor errors resulting in significant point deductions. Some students find his teaching methods outdated, while others appreciate his dedication to teaching C++ and OOP concepts. Overall, opinions vary on Professor Sterling, with some students praising his expertise and others criticizing his interpersonal skills and grading approach. Students are advised to prepare thoroughly and actively engage to succeed in his challenging class."
+  }
+]
+```
 
 ## Output Format
 
 The tool generates two output files:
-- `course_professor_analyses.json`: Detailed analysis with word-wrapped text
-- `course_professor_analyses.csv`: Tabular format for easy sorting/filtering
+- `course_professor_analyses.json`
+- `course_professor_analyses.csv`
 
 Each analysis includes:
 - Course code
@@ -70,7 +106,8 @@ Each analysis includes:
 ## Project Structure
 
 - `main.py`: Main script for processing courses
-- `review_scraper.py`: Core scraping and analysis functionality
+- `professor_finder.py`: Finds professors teaching specific courses
+- `review_analyzer.py`: Scrapes and analyzes professor reviews
 - `professor_ratings.csv`: Database of professor URLs
 - `courses.txt`: Optional input file for course codes
 - `requirements.txt`: Python dependencies 
