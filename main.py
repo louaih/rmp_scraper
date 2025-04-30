@@ -1,11 +1,23 @@
 import os
 import sys
-from professor_finder import RMPScraper
-from review_analyzer import ReviewScraper
+from src.professor_finder import RMPScraper
+from src.review_analyzer import ReviewScraper
 import pandas as pd
 import logging
 import json
 import time
+
+# Get the project root directory
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+# Define paths
+DATA_DIR = os.path.join(PROJECT_ROOT, 'data')
+INPUT_DIR = os.path.join(DATA_DIR, 'input')
+OUTPUT_DIR = os.path.join(DATA_DIR, 'output')
+
+# Ensure directories exist
+os.makedirs(INPUT_DIR, exist_ok=True)
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 def setup_logging():
     """Set up logging configuration"""
@@ -13,7 +25,7 @@ def setup_logging():
         level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s',
         handlers=[
-            logging.FileHandler('scraper.log'),
+            logging.FileHandler(os.path.join(PROJECT_ROOT, 'scraper.log')),
             logging.StreamHandler(sys.stdout)
         ]
     )
@@ -25,8 +37,9 @@ def get_course_codes():
         return sys.argv[1:]
     else:
         # Try to read from courses.txt
+        courses_file = os.path.join(INPUT_DIR, 'courses.txt')
         try:
-            with open('courses.txt', 'r') as f:
+            with open(courses_file, 'r') as f:
                 return [line.strip() for line in f if line.strip()]
         except FileNotFoundError:
             print("Please provide course codes either as command line arguments or in a courses.txt file.")
@@ -59,7 +72,7 @@ def main():
             logging.info(f"Processing course: {course_code}")
             try:
                 # Get professors for this course
-                professors_df = pd.read_csv('professors.csv')
+                professors_df = pd.read_csv(os.path.join(OUTPUT_DIR, 'professors.csv'))
                 course_professors = professors_df[professors_df['course_code'] == course_code]
                 
                 if course_professors.empty:
@@ -111,12 +124,12 @@ def main():
         # Save results
         if all_results:
             # Save as JSON
-            with open('course_professor_analyses.json', 'w', encoding='utf-8') as f:
+            with open(os.path.join(OUTPUT_DIR, 'course_professor_analyses.json'), 'w', encoding='utf-8') as f:
                 json.dump(all_results, f, ensure_ascii=False, indent=2)
             
             # Save as CSV
             results_df = pd.DataFrame(all_results)
-            results_df.to_csv('course_professor_analyses.csv', index=False)
+            results_df.to_csv(os.path.join(OUTPUT_DIR, 'course_professor_analyses.csv'), index=False)
             
             logging.info("Successfully saved results to course_professor_analyses.json and course_professor_analyses.csv")
         else:

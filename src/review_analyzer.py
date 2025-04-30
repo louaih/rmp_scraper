@@ -9,12 +9,17 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException,
 from webdriver_manager.firefox import GeckoDriverManager
 import time
 import json
-from openai import OpenAI  # Import OpenAI directly
+from openai import OpenAI
 import os
 from dotenv import load_dotenv
 import logging
 from functools import wraps
 import random
+
+# Get the project root directory (two levels up from this file)
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+INPUT_DIR = os.path.join(PROJECT_ROOT, 'data', 'input')
+OUTPUT_DIR = os.path.join(PROJECT_ROOT, 'data', 'output')
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -282,7 +287,7 @@ class ReviewScraper:
     def process_all_professors(self):
         """Process all professors from the CSV file"""
         try:
-            df = pd.read_csv('professors.csv')
+            df = pd.read_csv(os.path.join(OUTPUT_DIR, 'professors.csv'))
             results = []
             
             for _, row in df.iterrows():
@@ -330,12 +335,12 @@ class ReviewScraper:
                     continue
                 
             # Save results
-            with open('professor_analyses.json', 'w', encoding='utf-8') as f:
+            with open(os.path.join(OUTPUT_DIR, 'professor_analyses.json'), 'w', encoding='utf-8') as f:
                 json.dump(results, f, ensure_ascii=False, indent=2)
                 
             # Also save as CSV
             analysis_df = pd.DataFrame(results)
-            analysis_df.to_csv('professor_analyses.csv', index=False)
+            analysis_df.to_csv(os.path.join(OUTPUT_DIR, 'professor_analyses.csv'), index=False)
             logging.info("Successfully saved results to professor_analyses.json and professor_analyses.csv")
             
         except Exception as e:

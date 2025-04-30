@@ -1,6 +1,28 @@
 # Course Professor Review Analyzer
 
-This tool helps students make informed decisions about their course selections by analyzing RateMyProfessors reviews for professors teaching specific courses. It provides a comprehensive overview of teaching quality, course difficulty, and student feedback for each professor.
+A Python-based tool that leverages OpenAI's API for review analysis, Google Search API for professor discovery, and Selenium for web scraping RateMyProfessors data. The tool provides comprehensive course selection insights by analyzing teaching quality, difficulty ratings, and student feedback.
+
+## Project Structure
+
+```
+rmp_scraper/
+├── src/                           # Source code
+│   ├── professor_finder.py       # Professor search functionality
+│   └── review_analyzer.py        # Review analysis functionality
+├── data/                          # Data files
+│   ├── input/                    # Input files
+│   │   └── courses.txt          # Course codes to analyze
+│   └── output/                   # Generated output files
+│       ├── professor_ratings.json
+│       ├── professor_ratings.csv
+│       ├── course_professor_analyses.json
+│       └── course_professor_analyses.csv
+├── main.py                       # Main entry point
+├── requirements.txt              # Python dependencies
+├── README.md                     # Documentation
+├── .gitignore                    # Git ignore rules
+└── LICENSE                       # License file
+```
 
 ## Features
 
@@ -23,7 +45,7 @@ This tool helps students make informed decisions about their course selections b
      ```bash
      python main.py "CS-UY 2124" "CS-UY 1114"
      ```
-   - Or create a `courses.txt` file with one course code per line:
+   - Or create a `data/input/courses.txt` file with one course code per line:
      ```
      CS-UY 2124
      CS-UY 1114
@@ -35,8 +57,8 @@ This tool helps students make informed decisions about their course selections b
    ```
 
 4. **View Results**:
-   - Open `course_professor_analyses.json` in VS Code (enable word wrap with Alt+Z)
-   - Or view `course_professor_analyses.csv` in Excel/Google Sheets
+   - Open `data/output/course_professor_analyses.json` in VS Code (enable word wrap with Alt+Z)
+   - Or view `data/output/course_professor_analyses.csv` in Excel/Google Sheets
    - Check console for logs and troubleshooting information
 
 ## Sample Output
@@ -80,8 +102,6 @@ The tool generates four output files:
 - `course_professor_analyses.csv` <-- CSV just in case you wanted to view in Excel/Sheets
 - `professors.json`
 - `professors.csv`
-
-
 
 Each analysis includes:
 - Course code

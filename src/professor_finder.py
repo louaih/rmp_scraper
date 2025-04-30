@@ -5,30 +5,17 @@ import time
 import pandas as pd
 import json
 
+# Get the project root directory (two levels up from this file)
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+INPUT_DIR = os.path.join(PROJECT_ROOT, 'data', 'input')
+OUTPUT_DIR = os.path.join(PROJECT_ROOT, 'data', 'output')
+
 class RMPScraper:
     def __init__(self):
         # Load environment variables
         load_dotenv()
         self.api_key = os.getenv('GOOGLE_CLOUD_API_KEY')
         self.search_engine_id = os.getenv('GOOGLE_SEARCH_ENGINE_ID')
-        
-        self.courses = {
-            "ANTH-UA 326": "Introduction to Forensic Anthropology",
-            "ANTH-UA 202": "Archaeobotany",
-            "BIOL-UA 64": "Geographic Information Systems for Ecology",
-            "CHEM-UA 140": "Mathematics of Chemistry",
-            "CORE-UA 107": "Quantitative Reasoning: Problems, Statistics, & Decision Making",
-            "CSCD-UE 110": "Science of Language",
-            "MATH-UA 144": "Introduction to Computer Simulation",
-            "ME-UY 2813": "Introduction to Materials Science",
-            "NUTR-UE 119": "Nutrition and Health",
-            "NUTR-UE 1068": "Introduction to Human Physiology",
-            "PHYS-UA 13": "Observational Astronomy",
-            "PHYS-UA 15": "Introduction to Cosmology",
-            "PHYS-UA 20": "20th Cent Concepts of Space, Time, & Matter",
-            "PHYS-UA 120": "Dynamics",
-            "URB-UY 2334": "Introduction of Environmental Sciences"
-        }
 
     def format_course_code(self, code):
         # Convert "ANTH-UA 326" to "ANTH326"
@@ -96,7 +83,12 @@ class RMPScraper:
     def scrape_all_courses(self):
         all_results = []
         
-        for code, name in self.courses.items():
+        # Read courses from input file
+        courses_file = os.path.join(INPUT_DIR, 'courses.txt')
+        with open(courses_file, 'r') as f:
+            courses = {line.strip(): f"Course {line.strip()}" for line in f if line.strip()}
+        
+        for code, name in courses.items():
             results = self.scrape_course(code, name)
             # Filter for NYU professors only and clean up professor names
             nyu_results = self.filter_nyu_professors(results)
@@ -107,14 +99,14 @@ class RMPScraper:
             
             # Save after each course in case of interruption
             df = pd.DataFrame(all_results)
-            df.to_csv('professors.csv', index=False)
+            df.to_csv(os.path.join(OUTPUT_DIR, 'professors.csv'), index=False)
             
             time.sleep(3)  # Delay between courses
         
         print("\nFinal results saved to professors.csv")
         
         # Also save as JSON for better readability
-        with open('professors.json', 'w', encoding='utf-8') as f:
+        with open(os.path.join(OUTPUT_DIR, 'professors.json'), 'w', encoding='utf-8') as f:
             json.dump(all_results, f, ensure_ascii=False, indent=2)
         print("Detailed results saved to professors.json")
 
