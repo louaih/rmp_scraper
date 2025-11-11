@@ -54,6 +54,7 @@ def main():
     course_codes = get_course_codes()
     logging.info(f"Analyzing professors for courses: {', '.join(course_codes)}")
     
+    analyzer = None
     try:
         # Step 1: Find professors using professor_finder
         logging.info("Step 1: Finding professors for courses...")
@@ -138,7 +139,12 @@ def main():
     except Exception as e:
         logging.error(f"Fatal error: {e}")
     finally:
-        analyzer.close()
+        # Only attempt to close the analyzer if it was successfully created
+        if analyzer is not None:
+            try:
+                analyzer.close()
+            except Exception as e:
+                logging.error(f"Error closing analyzer: {e}")
 
 if __name__ == "__main__":
     main() 

@@ -1,6 +1,8 @@
 # Environment files
 .env
 .venv/
+.winvenv/
+.*venv/
 __pycache__/
 *.pyc
 
