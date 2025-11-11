@@ -15,6 +15,9 @@ from dotenv import load_dotenv
 import logging
 from functools import wraps
 import random
+import requests
+import re
+import base64
 
 # Get the project root directory (two levels up from this file)
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -71,170 +74,185 @@ class ReviewScraper:
             else:
                 logging.error(f"Failed to initialize OpenAI client: {e}")
             raise
-        
-        self.setup_driver()
-        
-    def setup_driver(self):
-        """Set up the Firefox browser driver with appropriate options"""
-        try:
-            # Configure Firefox options
-            firefox_options = Options()
-            firefox_options.add_argument('--headless')
-            firefox_options.add_argument('--disable-gpu')
-            firefox_options.add_argument('--no-sandbox')
-            firefox_options.add_argument('--disable-dev-shm-usage')
-            
-            # Use webdriver_manager to handle GeckoDriver
-            service = Service(GeckoDriverManager().install())
-            self.driver = webdriver.Firefox(service=service, options=firefox_options)
-            
-            # Set timeouts
-            self.driver.set_page_load_timeout(60)  # Increased timeout
-            self.driver.implicitly_wait(10)
-            
-        except WebDriverException as e:
-            logging.error(f"Error setting up Firefox WebDriver: {e}")
-            raise
-        except Exception as e:
-            logging.error(f"Unexpected error setting up driver: {e}")
-            raise
 
-    @retry_on_failure(max_retries=3, delay=5)
-    def scrape_reviews(self, url):
-        """Scrape all reviews from a professor's RMP page"""
-        logging.info(f"Scraping reviews from: {url}")
-        reviews = []
-        
+    def extract_teacher_id_from_url(self, url):
+        """Extract the teacher ID from the RateMyProfessors URL"""
+        # URL format: https://www.ratemyprofessors.com/ShowRatings.jsp?tid=1234567
+        # or newer format: https://www.ratemyprofessors.com/professor/1234567
         try:
-            # Navigate to the page with retry logic
-            try:
-                self.driver.get(url)
-            except TimeoutException:
-                logging.warning("Page load timed out, but continuing...")
-            
-            # Wait for any review content to load
-            try:
-                WebDriverWait(self.driver, 20).until(
-                    EC.presence_of_element_located((
-                        By.XPATH, 
-                        "//div[contains(@class, 'Rating__RatingBody')]"
-                    ))
-                )
-            except TimeoutException:
-                logging.warning("Reviews did not load within timeout, but continuing...")
-            
-            # Get all review cards
-            review_cards = []
-            try:
-                review_cards = self.driver.find_elements(
-                    By.XPATH, 
-                    "//div[contains(@class, 'Rating__RatingBody')]"
-                )
-                logging.info(f"Found {len(review_cards)} review cards")
-            except StaleElementReferenceException:
-                logging.warning("Stale element reference when finding review cards, retrying...")
-                review_cards = self.driver.find_elements(
-                    By.XPATH, 
-                    "//div[contains(@class, 'Rating__RatingBody')]"
-                )
-            
-            for card in review_cards:
-                try:
-                    # Get review text
-                    try:
-                        review_text = card.find_element(
-                            By.XPATH, 
-                            ".//div[contains(@class, 'Comments__StyledComments')]"
-                        ).text
-                        logging.debug("Successfully found review text")
-                    except NoSuchElementException:
-                        logging.warning("Could not find review text")
-                        review_text = "No review text available"
-                    
-                    # Get timestamp
-                    try:
-                        timestamp = card.find_element(
-                            By.XPATH, 
-                            ".//div[contains(@class, 'TimeStamp__StyledTimeStamp')]"
-                        ).text
-                        logging.debug(f"Found timestamp: {timestamp}")
-                    except NoSuchElementException:
-                        logging.warning("Could not find timestamp")
-                        timestamp = "Unknown date"
-                    
-                    # Get quality and difficulty ratings
-                    quality_rating = None
-                    difficulty_rating = None
-                    
-                    try:
-                        # Find all rating containers
-                        rating_containers = card.find_elements(
-                            By.XPATH, 
-                            ".//div[contains(@class, 'CardNumRating__StyledCardNumRating')]"
-                        )
-                        logging.debug(f"Found {len(rating_containers)} rating containers")
-                        
-                        for container in rating_containers:
-                            try:
-                                # Get the label from CardNumRating__CardNumRatingHeader
-                                label = container.find_element(
-                                    By.XPATH,
-                                    ".//div[contains(@class, 'CardNumRating__CardNumRatingHeader')]"
-                                ).text.strip()
-                                
-                                # Get the value from CardNumRating__CardNumRatingNumber
-                                value = container.find_element(
-                                    By.XPATH,
-                                    ".//div[contains(@class, 'CardNumRating__CardNumRatingNumber')]"
-                                ).text.strip()
-                                
-                                logging.debug(f"Processing rating: {label} = {value}")
-                                
-                                if "QUALITY" in label.upper():
-                                    try:
-                                        quality_rating = float(value)
-                                        logging.debug(f"Set quality rating to {quality_rating}")
-                                    except ValueError:
-                                        logging.warning(f"Could not convert quality value '{value}' to float")
-                                elif "DIFFICULTY" in label.upper():
-                                    try:
-                                        difficulty_rating = float(value)
-                                        logging.debug(f"Set difficulty rating to {difficulty_rating}")
-                                    except ValueError:
-                                        logging.warning(f"Could not convert difficulty value '{value}' to float")
-                                else:
-                                    logging.warning(f"Unknown rating label: {label}")
-                            except Exception as e:
-                                logging.warning(f"Error processing rating container: {e}")
-                    except Exception as e:
-                        logging.warning(f"Error finding rating containers: {e}")
-                    
-                    # Log the final ratings for this review
-                    logging.info(f"Review ratings - Quality: {quality_rating}, Difficulty: {difficulty_rating}")
-                    
-                    reviews.append({
-                        'text': review_text,
-                        'timestamp': timestamp,
-                        'quality_rating': quality_rating,
-                        'difficulty_rating': difficulty_rating
-                    })
-                    
-                except (NoSuchElementException, StaleElementReferenceException) as e:
-                    logging.warning(f"Failed to scrape a review: {e}")
-                    continue
-                except Exception as e:
-                    logging.error(f"Unexpected error while processing review: {e}")
-                    continue
-                    
-            logging.info(f"Successfully scraped {len(reviews)} reviews")
-            return {
-                'reviews': reviews,
-                'total_reviews': len(reviews)
-            }
-            
+            match = re.search(r'(?:tid=|professor/)(\d+)', url)
+            if match:
+                teacher_id = match.group(1)
+                # Encode to base64 for the GraphQL ID
+                encoded = base64.b64encode(f"Teacher-{teacher_id}".encode()).decode()
+                logging.debug(f"Extracted teacher ID: {teacher_id}, encoded: {encoded}")
+                return encoded
         except Exception as e:
-            logging.error(f"Error scraping reviews for {url}: {e}")
-            raise
+            logging.warning(f"Could not extract teacher ID from URL {url}: {e}")
+        return None
+
+    def fetch_reviews_via_graphql(self, teacher_id_encoded, course_filter=None, max_reviews=None):
+        """Fetch reviews using the RateMyProfessors GraphQL API with cursor-based pagination"""
+        reviews = []
+        cursor = None
+        page_count = 0
+        graphql_url = "https://www.ratemyprofessors.com/graphql"
+
+        # Headers that mimic a real browser to avoid 403 Forbidden
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+            "Accept": "*/*",
+            "Accept-Encoding": "gzip, deflate, br, zstd",
+            "Accept-Language": "en-US,en;q=0.6",
+            "Cache-Control": "no-cache",
+            "Content-Type": "application/json",
+            "Origin": "https://www.ratemyprofessors.com",
+            "Pragma": "no-cache",
+            "Priority": "u=1, i",
+            "Referer": "https://www.ratemyprofessors.com/",
+            "Sec-CH-UA": '"Chromium";v="142", "Brave";v="142", "Not_A Brand";v="99"',
+            "Sec-CH-UA-Mobile": "?0",
+            "Sec-CH-UA-Platform": '"Windows"',
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-origin",
+            "Sec-GPC": "1"
+        }
+
+        graphql_query = """
+        query RatingsListQuery(
+          $count: Int!
+          $id: ID!
+          $courseFilter: String
+          $cursor: String
+        ) {
+          node(id: $id) {
+            __typename
+            ... on Teacher {
+              id
+              legacyId
+              firstName
+              lastName
+              numRatings
+              school {
+                id
+                name
+              }
+              ratings(first: $count, after: $cursor, courseFilter: $courseFilter) {
+                edges {
+                  cursor
+                  node {
+                    id
+                    comment
+                    date
+                    class
+                    helpfulRating
+                    clarityRating
+                    difficultyRating
+                    __typename
+                  }
+                }
+                pageInfo {
+                  hasNextPage
+                  endCursor
+                }
+              }
+            }
+          }
+        }
+        """
+
+        while True:
+            page_count += 1
+            logging.info(f"Fetching page {page_count} of reviews (cursor: {cursor})")
+
+            variables = {
+                "count": 20,  # Fetch more per request for efficiency
+                "id": teacher_id_encoded,
+                "courseFilter": course_filter,
+                "cursor": cursor
+            }
+
+            payload = {
+                "operationName": "RatingsListQuery",
+                "query": graphql_query,
+                "variables": variables
+            }
+
+            try:
+                response = requests.post(graphql_url, json=payload, headers=headers, timeout=15)
+                response.raise_for_status()
+                data = response.json()
+
+                # Check for GraphQL errors
+                if "errors" in data:
+                    logging.error(f"GraphQL error: {data['errors']}")
+                    break
+
+                # Extract ratings from response
+                try:
+                    ratings_connection = data['data']['node']['ratings']
+                    edges = ratings_connection.get('edges', [])
+
+                    for edge in edges:
+                        node = edge['node']
+                        reviews.append({
+                            'text': node.get('comment', ''),
+                            'timestamp': node.get('date', 'Unknown date'),
+                            'quality_rating': node.get('clarityRating'),
+                            'difficulty_rating': node.get('difficultyRating')
+                        })
+
+                    page_info = ratings_connection.get('pageInfo', {})
+                    has_next_page = page_info.get('hasNextPage', False)
+                    end_cursor = page_info.get('endCursor')
+
+                    logging.info(f"Page {page_count}: fetched {len(edges)} reviews, total so far: {len(reviews)}")
+
+                    if not has_next_page or not end_cursor:
+                        logging.info(f"No more pages. Total reviews fetched: {len(reviews)}")
+                        break
+
+                    if max_reviews and len(reviews) >= max_reviews:
+                        logging.info(f"Reached max_reviews limit ({max_reviews}). Stopping pagination.")
+                        reviews = reviews[:max_reviews]
+                        break
+
+                    cursor = end_cursor
+                    time.sleep(0.5)  # Small delay between requests
+
+                except KeyError as e:
+                    logging.error(f"Unexpected response structure: {e}")
+                    logging.debug(f"Response: {data}")
+                    break
+
+            except Exception as e:
+                logging.error(f"Error fetching reviews via GraphQL: {e}")
+                if page_count == 1:
+                    logging.error("Failed on first page, aborting pagination")
+                    break
+                else:
+                    logging.warning(f"Error on page {page_count}, returning {len(reviews)} reviews fetched so far")
+                    break
+
+        logging.info(f"Successfully fetched {len(reviews)} reviews via GraphQL")
+        return {
+            'reviews': reviews,
+            'total_reviews': len(reviews)
+        }
+
+    def scrape_reviews(self, url):
+        """Scrape all reviews from a professor's RMP page using GraphQL API"""
+        logging.info(f"Scraping reviews from: {url}")
+
+        # Extract teacher ID and convert to GraphQL ID format
+        teacher_id_encoded = self.extract_teacher_id_from_url(url)
+        if not teacher_id_encoded:
+            logging.error(f"Could not extract teacher ID from URL: {url}")
+            return {'reviews': [], 'total_reviews': 0}
+
+        # Fetch reviews using GraphQL with pagination
+        return self.fetch_reviews_via_graphql(teacher_id_encoded)
             
     def analyze_reviews(self, reviews):
         """Use OpenAI to analyze and summarize the reviews"""
@@ -399,12 +417,8 @@ class ReviewScraper:
             raise
             
     def close(self):
-        """Close the browser driver"""
-        try:
-            self.driver.quit()
-            logging.info("Successfully closed the browser driver")
-        except Exception as e:
-            logging.error(f"Error closing the browser driver: {e}")
+        """Clean up resources (no longer needed since we use GraphQL instead of Selenium)"""
+        logging.info("Cleanup complete")
 
 if __name__ == "__main__":
     scraper = ReviewScraper()
