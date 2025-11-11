@@ -13,8 +13,8 @@ rmp_scraper/
 │   ├── input/                    # Input files
 │   │   └── courses.txt          # Course codes to analyze
 │   └── output/                   # Generated output files
-│       ├── professor_ratings.json
-│       ├── professor_ratings.csv
+│       ├── professors.json
+│       ├── professors.csv
 │       ├── course_professor_analyses.json
 │       └── course_professor_analyses.csv
 ├── main.py                       # Main entry point
