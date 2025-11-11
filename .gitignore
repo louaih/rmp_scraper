@@ -6,6 +6,9 @@
 __pycache__/
 *.pyc
 
+# Input files
+data/input/courses.txt
+
 # Output files
 *.json
 *.csv
