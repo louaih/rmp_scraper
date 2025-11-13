@@ -19,12 +19,18 @@ logger = logging.getLogger(__name__)
 # Google OAuth configuration
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
+OAUTH_REDIRECT_URI = os.getenv('OAUTH_REDIRECT_URI')  # e.g., https://profs.louai.dev/oauth/callback
 ALLOWED_DOMAIN = 'nyu.edu'  # Only allow NYU workspace accounts
 
-def get_oauth_flow(redirect_uri):
+def get_oauth_flow(redirect_uri=None):
     """Create and return Google OAuth flow"""
     if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
         raise ValueError("GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set in environment variables")
+    
+    # Use environment variable if set, otherwise use provided redirect_uri
+    final_redirect_uri = OAUTH_REDIRECT_URI or redirect_uri
+    if not final_redirect_uri:
+        raise ValueError("redirect_uri must be provided or OAUTH_REDIRECT_URI environment variable must be set")
     
     # Try to load from client_secret.json if it exists
     client_secrets_file = 'client_secret.json'
@@ -32,7 +38,7 @@ def get_oauth_flow(redirect_uri):
         return Flow.from_client_secrets_file(
             client_secrets_file,
             scopes=['openid', 'email', 'profile'],
-            redirect_uri=redirect_uri
+            redirect_uri=final_redirect_uri
         )
     else:
         # Fall back to environment variables
@@ -42,13 +48,13 @@ def get_oauth_flow(redirect_uri):
                 "client_secret": GOOGLE_CLIENT_SECRET,
                 "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                 "token_uri": "https://oauth2.googleapis.com/token",
-                "redirect_uris": [redirect_uri]
+                "redirect_uris": [final_redirect_uri]
             }
         }
         return Flow.from_client_config(
             client_config,
             scopes=['openid', 'email', 'profile'],
-            redirect_uri=redirect_uri
+            redirect_uri=final_redirect_uri
         )
 
 def login_required(f):

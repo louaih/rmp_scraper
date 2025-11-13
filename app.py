@@ -91,8 +91,10 @@ def auth_google():
         return render_template('login.html', error='OAuth credentials not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables.')
     
     try:
-        # Generate authorization URL
-        redirect_uri = url_for('oauth_callback', _external=True)
+        # Use environment variable redirect URI if available, otherwise generate from Flask
+        redirect_uri = os.getenv('OAUTH_REDIRECT_URI') or url_for('oauth_callback', _external=True)
+        logger.info(f"Using redirect URI: {redirect_uri}")
+        
         flow = get_oauth_flow(redirect_uri)
         authorization_url, state = flow.authorization_url(
             access_type='offline',
@@ -102,7 +104,7 @@ def auth_google():
         
         # Store state for verification
         session['oauth_state'] = state
-        logger.info(f"OAuth flow initiated, redirecting to: {authorization_url[:50]}...")
+        logger.info(f"OAuth flow initiated, redirecting to: {authorization_url[:80]}...")
         return redirect(authorization_url)
     except Exception as e:
         logger.error(f"Error initiating Google OAuth: {e}")
@@ -119,8 +121,10 @@ def oauth_callback():
         return render_template('login.html', error='State mismatch. Authentication failed.'), 403
     
     try:
-        # Exchange authorization code for token
-        redirect_uri = url_for('oauth_callback', _external=True)
+        # Use environment variable redirect URI if available, otherwise generate from Flask
+        redirect_uri = os.getenv('OAUTH_REDIRECT_URI') or url_for('oauth_callback', _external=True)
+        logger.info(f"Handling OAuth callback with redirect URI: {redirect_uri}")
+        
         flow = get_oauth_flow(redirect_uri)
         flow.fetch_token(authorization_response=request.url)
         
@@ -129,6 +133,7 @@ def oauth_callback():
         id_info = verify_oauth2_token(credentials.id_token, Request(), GOOGLE_CLIENT_ID)
         
         email = id_info.get('email', '').lower()
+        logger.info(f"OAuth token verified for email: {email}")
         
         # Verify NYU account
         if not is_nyu_account(email):
