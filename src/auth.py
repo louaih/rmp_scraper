@@ -37,7 +37,11 @@ def get_oauth_flow(redirect_uri=None):
     if os.path.exists(client_secrets_file):
         return Flow.from_client_secrets_file(
             client_secrets_file,
-            scopes=['openid', 'email', 'profile'],
+            scopes=[
+                'openid',
+                'https://www.googleapis.com/auth/userinfo.email',
+                'https://www.googleapis.com/auth/userinfo.profile'
+            ],
             redirect_uri=final_redirect_uri
         )
     else:
@@ -53,7 +57,11 @@ def get_oauth_flow(redirect_uri=None):
         }
         return Flow.from_client_config(
             client_config,
-            scopes=['openid', 'email', 'profile'],
+            scopes=[
+                'openid',
+                'https://www.googleapis.com/auth/userinfo.email',
+                'https://www.googleapis.com/auth/userinfo.profile'
+            ],
             redirect_uri=final_redirect_uri
         )
 
