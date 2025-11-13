@@ -152,6 +152,12 @@
         <p class="subtitle">NYU Students Only</p>
         <div class="nyu-badge">🎓 NYU Workspace Required</div>
 
+        {% if error %}
+        <div class="error-message">
+            {{ error }}
+        </div>
+        {% endif %}
+
         <p class="description">
             Analyze professor reviews and get AI-powered insights.
             <br><br>

@@ -9,6 +9,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.id_token import verify_oauth2_token
 from google_auth_oauthlib.flow import Flow
 from dotenv import load_dotenv
+import json
 
 load_dotenv()
 
@@ -25,11 +26,30 @@ def get_oauth_flow(redirect_uri):
     if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
         raise ValueError("GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set in environment variables")
     
-    return Flow.from_client_secrets_file(
-        'client_secret.json',
-        scopes=['openid', 'email', 'profile'],
-        redirect_uri=redirect_uri
-    )
+    # Try to load from client_secret.json if it exists
+    client_secrets_file = 'client_secret.json'
+    if os.path.exists(client_secrets_file):
+        return Flow.from_client_secrets_file(
+            client_secrets_file,
+            scopes=['openid', 'email', 'profile'],
+            redirect_uri=redirect_uri
+        )
+    else:
+        # Fall back to environment variables
+        client_config = {
+            "installed": {
+                "client_id": GOOGLE_CLIENT_ID,
+                "client_secret": GOOGLE_CLIENT_SECRET,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "redirect_uris": [redirect_uri]
+            }
+        }
+        return Flow.from_client_config(
+            client_config,
+            scopes=['openid', 'email', 'profile'],
+            redirect_uri=redirect_uri
+        )
 
 def login_required(f):
     """Decorator to require login for routes"""

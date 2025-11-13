@@ -10,11 +10,10 @@ from io import StringIO
 import csv
 from src.review_analyzer import ReviewScraper
 from src.professor_finder import RMPScraper
-from src.auth import login_required, is_nyu_account, get_current_user
+from src.auth import login_required, is_nyu_account, get_current_user, get_oauth_flow
 from dotenv import load_dotenv
 from google.auth.transport.requests import Request
 from google.oauth2.id_token import verify_oauth2_token
-from google_auth_oauthlib.flow import Flow
 import secrets
 
 # Load environment variables
@@ -87,17 +86,14 @@ def auth_google():
     if 'user_email' in session:
         return redirect(url_for('index'))
     
-    if GOOGLE_CLIENT_ID is None or GOOGLE_CLIENT_SECRET is None:
+    if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
         logger.error("Google OAuth credentials not configured")
-        return render_template('login.html', error='OAuth not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.')
+        return render_template('login.html', error='OAuth credentials not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables.')
     
     try:
         # Generate authorization URL
-        flow = Flow.from_client_secrets_file(
-            'client_secret.json',
-            scopes=SCOPES,
-            redirect_uri=url_for('oauth_callback', _external=True)
-        )
+        redirect_uri = url_for('oauth_callback', _external=True)
+        flow = get_oauth_flow(redirect_uri)
         authorization_url, state = flow.authorization_url(
             access_type='offline',
             include_granted_scopes='true',
@@ -106,6 +102,7 @@ def auth_google():
         
         # Store state for verification
         session['oauth_state'] = state
+        logger.info(f"OAuth flow initiated, redirecting to: {authorization_url[:50]}...")
         return redirect(authorization_url)
     except Exception as e:
         logger.error(f"Error initiating Google OAuth: {e}")
@@ -119,15 +116,12 @@ def oauth_callback():
     state = request.args.get('state')
     if state != session.get('oauth_state'):
         logger.warning("OAuth state mismatch - potential CSRF attack")
-        return jsonify({'error': 'State mismatch. Authentication failed.'}), 403
+        return render_template('login.html', error='State mismatch. Authentication failed.'), 403
     
     try:
         # Exchange authorization code for token
-        flow = Flow.from_client_secrets_file(
-            'client_secret.json',
-            scopes=SCOPES,
-            redirect_uri=url_for('oauth_callback', _external=True)
-        )
+        redirect_uri = url_for('oauth_callback', _external=True)
+        flow = get_oauth_flow(redirect_uri)
         flow.fetch_token(authorization_response=request.url)
         
         # Get user info from token
@@ -150,7 +144,7 @@ def oauth_callback():
         
     except Exception as e:
         logger.error(f"OAuth callback error: {e}")
-        return jsonify({'error': f'Authentication failed: {str(e)}'}), 500
+        return render_template('login.html', error=f'Authentication failed: {str(e)}'), 500
 
 
 @app.route('/logout', methods=['GET', 'POST'])
