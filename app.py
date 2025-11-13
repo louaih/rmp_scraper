@@ -135,19 +135,28 @@ def oauth_callback():
         # (Google converts scopes to full URLs during flow, causing validation issues)
         try:
             id_info = verify_oauth2_token(credentials.id_token, Request(), GOOGLE_CLIENT_ID)
-        except ValueError as ve:
-            # Scope mismatch is not a security issue - just decode the token
-            if 'Scope has changed' in str(ve):
-                logger.info(f"Scope mismatch detected (expected): {ve}")
-                import json
-                from base64 import urlsafe_b64decode
-                # Decode JWT payload manually
-                parts = credentials.id_token.split('.')
-                # Add padding if needed
-                payload = parts[1]
-                payload += '=' * (4 - len(payload) % 4)
-                id_info = json.loads(urlsafe_b64decode(payload))
+        except Exception as ve:
+            msg = str(ve) or ''
+            # Detect the known scope-change message (case-insensitive)
+            if 'scope has changed' in msg.lower() or 'scope has changed from' in msg.lower():
+                logger.info(f"Scope mismatch detected during token verification: {ve}")
+                try:
+                    import json
+                    from base64 import urlsafe_b64decode
+                    # Decode JWT payload manually (no verification)
+                    parts = credentials.id_token.split('.')
+                    if len(parts) < 2:
+                        raise ve
+                    payload = parts[1]
+                    rem = len(payload) % 4
+                    if rem:
+                        payload += '=' * (4 - rem)
+                    id_info = json.loads(urlsafe_b64decode(payload.encode('utf-8')))
+                except Exception:
+                    # If manual decode fails, re-raise the original verification exception
+                    raise ve
             else:
+                # Re-raise unexpected verification errors
                 raise
         
         email = id_info.get('email', '').lower()
