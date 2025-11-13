@@ -1,4 +1,5 @@
 # Course Professor Review Analyzer
+Deployed on Vercel: [profs.louai.dev](profs.louai.dev)
 
 A Python-based tool that leverages OpenAI's API for review analysis, Google Search API for professor discovery, and Selenium for web scraping RateMyProfessors data. The tool provides comprehensive course selection insights by analyzing teaching quality, difficulty ratings, and student feedback.
 
@@ -117,3 +118,4 @@ Each analysis includes:
 - Selenium
 - OpenAI API key (for review analysis)
 - Firefox browser (for web scraping)
+
