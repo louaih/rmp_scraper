@@ -1,19 +1,10 @@
 import pandas as pd
-from selenium import webdriver
-from selenium.webdriver.firefox.service import Service
-from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException, StaleElementReferenceException
-from webdriver_manager.firefox import GeckoDriverManager
 import time
 import json
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
 import logging
-from functools import wraps
 import random
 import requests
 import re
@@ -26,24 +17,6 @@ OUTPUT_DIR = os.path.join(PROJECT_ROOT, 'data', 'output')
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-def retry_on_failure(max_retries=3, delay=2):
-    """Decorator to retry a function on failure"""
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            for attempt in range(max_retries):
-                try:
-                    return func(*args, **kwargs)
-                except Exception as e:
-                    if attempt == max_retries - 1:
-                        logging.error(f"Failed after {max_retries} attempts: {e}")
-                        raise
-                    logging.warning(f"Attempt {attempt + 1} failed: {e}. Retrying in {delay} seconds...")
-                    time.sleep(delay + random.uniform(0, 1))  # Add jitter
-            return None
-        return wrapper
-    return decorator
 
 class ReviewScraper:
     def __init__(self):
