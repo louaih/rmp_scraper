@@ -71,6 +71,7 @@ class ReviewScraper:
         reviews = []
         cursor = None
         page_count = 0
+        professor_name = None
         graphql_url = "https://www.ratemyprofessors.com/graphql"
 
         # Headers that mimic a real browser to avoid 403 Forbidden
@@ -166,7 +167,17 @@ class ReviewScraper:
 
                 # Extract ratings from response
                 try:
-                    ratings_connection = data['data']['node']['ratings']
+                    node = data['data']['node']
+                    
+                    # Extract professor name on first page
+                    if professor_name is None and 'firstName' in node and 'lastName' in node:
+                        first_name = node.get('firstName', '').strip()
+                        last_name = node.get('lastName', '').strip()
+                        professor_name = f"{first_name} {last_name}".strip()
+                        if professor_name:
+                            logging.info(f"Found professor: {professor_name}")
+                    
+                    ratings_connection = node.get('ratings', {})
                     edges = ratings_connection.get('edges', [])
 
                     for edge in edges:
@@ -213,7 +224,8 @@ class ReviewScraper:
         logging.info(f"Successfully fetched {len(reviews)} reviews via GraphQL")
         return {
             'reviews': reviews,
-            'total_reviews': len(reviews)
+            'total_reviews': len(reviews),
+            'professor_name': professor_name
         }
 
     def scrape_reviews(self, url):
@@ -224,7 +236,7 @@ class ReviewScraper:
         teacher_id_encoded = self.extract_teacher_id_from_url(url)
         if not teacher_id_encoded:
             logging.error(f"Could not extract teacher ID from URL: {url}")
-            return {'reviews': [], 'total_reviews': 0}
+            return {'reviews': [], 'total_reviews': 0, 'professor_name': None}
 
         # Fetch reviews using GraphQL with pagination
         return self.fetch_reviews_via_graphql(teacher_id_encoded)

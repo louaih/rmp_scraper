@@ -154,7 +154,7 @@ def analyze():
 
                     results.append({
                         'url': url,
-                        'professor_name': 'Professor',
+                        'professor_name': review_data.get('professor_name') or 'Professor',
                         'number_of_reviews': len(review_data['reviews']),
                         'average_quality': avg_quality,
                         'average_difficulty': avg_difficulty,
