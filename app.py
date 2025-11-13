@@ -4,12 +4,18 @@ Flask web app for RateMyProfessors review analysis
 import os
 import json
 import logging
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for
+from flask_login import LoginManager
 from io import StringIO
 import csv
 from src.review_analyzer import ReviewScraper
 from src.professor_finder import RMPScraper
+from src.auth import login_required, is_nyu_account, get_current_user
 from dotenv import load_dotenv
+from google.auth.transport.requests import Request
+from google.oauth2.id_token import verify_oauth2_token
+from google_auth_oauthlib.flow import Flow
+import secrets
 
 # Load environment variables
 load_dotenv()
@@ -17,10 +23,16 @@ load_dotenv()
 # Initialize Flask app
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.secret_key = os.getenv('SECRET_KEY') or secrets.token_hex(32)
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+# Google OAuth configuration
+GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
+SCOPES = ['openid', 'email', 'profile']
 
 # Global instances
 scraper = None
@@ -52,11 +64,106 @@ def get_finder():
 
 @app.route('/', methods=['GET'])
 def index():
-    """Home page"""
-    return render_template('index.html')
+    """Home page - redirect to login if not authenticated"""
+    if 'user_email' not in session:
+        return redirect(url_for('login'))
+    return render_template('index.html', user_email=get_current_user())
+
+
+@app.route('/login', methods=['GET'])
+def login():
+    """Show login page or initiate Google OAuth"""
+    # If user is already logged in, redirect to home
+    if 'user_email' in session:
+        return redirect(url_for('index'))
+    
+    # If it's a fresh GET request, show the login page
+    return render_template('login.html')
+
+
+@app.route('/auth/google', methods=['GET'])
+def auth_google():
+    """Initiate Google OAuth login flow"""
+    if 'user_email' in session:
+        return redirect(url_for('index'))
+    
+    if GOOGLE_CLIENT_ID is None or GOOGLE_CLIENT_SECRET is None:
+        logger.error("Google OAuth credentials not configured")
+        return render_template('login.html', error='OAuth not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.')
+    
+    try:
+        # Generate authorization URL
+        flow = Flow.from_client_secrets_file(
+            'client_secret.json',
+            scopes=SCOPES,
+            redirect_uri=url_for('oauth_callback', _external=True)
+        )
+        authorization_url, state = flow.authorization_url(
+            access_type='offline',
+            include_granted_scopes='true',
+            prompt='consent'
+        )
+        
+        # Store state for verification
+        session['oauth_state'] = state
+        return redirect(authorization_url)
+    except Exception as e:
+        logger.error(f"Error initiating Google OAuth: {e}")
+        return render_template('login.html', error=f'OAuth initialization failed: {str(e)}')
+
+
+@app.route('/oauth/callback', methods=['GET'])
+def oauth_callback():
+    """Handle Google OAuth callback"""
+    # Verify state parameter
+    state = request.args.get('state')
+    if state != session.get('oauth_state'):
+        logger.warning("OAuth state mismatch - potential CSRF attack")
+        return jsonify({'error': 'State mismatch. Authentication failed.'}), 403
+    
+    try:
+        # Exchange authorization code for token
+        flow = Flow.from_client_secrets_file(
+            'client_secret.json',
+            scopes=SCOPES,
+            redirect_uri=url_for('oauth_callback', _external=True)
+        )
+        flow.fetch_token(authorization_response=request.url)
+        
+        # Get user info from token
+        credentials = flow.credentials
+        id_info = verify_oauth2_token(credentials.id_token, Request(), GOOGLE_CLIENT_ID)
+        
+        email = id_info.get('email', '').lower()
+        
+        # Verify NYU account
+        if not is_nyu_account(email):
+            logger.warning(f"Login attempt with non-NYU account: {email}")
+            return render_template('unauthorized.html', email=email), 403
+        
+        # Store user in session
+        session['user_email'] = email
+        session['user_name'] = id_info.get('name', email)
+        
+        logger.info(f"User logged in: {email}")
+        return redirect(url_for('index'))
+        
+    except Exception as e:
+        logger.error(f"OAuth callback error: {e}")
+        return jsonify({'error': f'Authentication failed: {str(e)}'}), 500
+
+
+@app.route('/logout', methods=['GET', 'POST'])
+def logout():
+    """Log out the user"""
+    user_email = session.get('user_email')
+    session.clear()
+    logger.info(f"User logged out: {user_email}")
+    return redirect(url_for('login'))
 
 
 @app.route('/api/search-professors', methods=['POST'])
+@login_required
 def search_professors():
     """Search for professors teaching a course"""
     try:
@@ -97,6 +204,7 @@ def search_professors():
 
 
 @app.route('/api/analyze', methods=['POST'])
+@login_required
 def analyze():
     """API endpoint to analyze professor reviews"""
     try:
@@ -191,6 +299,7 @@ def analyze():
 
 
 @app.route('/api/export', methods=['POST'])
+@login_required
 def export_results():
     """Export results as CSV"""
     try:

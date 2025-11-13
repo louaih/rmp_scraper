@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - RateMyProfessors Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 50px;
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .logo {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .nyu-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-bottom: 30px;
+        }
+
+        .description {
+            color: #666;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .login-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            color: #333;
+            border: 2px solid #e0e0e0;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-btn:hover {
+            background: #f8f8f8;
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .google-icon {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+            background-size: contain;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="%234285F4" d="M45.12 24.5c0-1.56-.14-3.09-.4-4.59H24v8.68h11.6c-.5 2.64-2.05 4.88-4.37 6.39v5.5h7.07c4.14-3.81 6.52-9.42 6.52-16.01"/><path fill="%2334A853" d="M24 46c5.94 0 10.92-1.97 14.57-5.33l-7.07-5.5c-1.95 1.31-4.45 2.08-7.5 2.08-5.77 0-10.66-3.9-12.4-9.15H4.41v5.68C7.66 42.7 15.32 46 24 46"/><path fill="%23FBBC04" d="M11.6 28.1c-.4-1.31-.62-2.7-.62-4.1s.22-2.79.62-4.1V13.22H4.41C2.85 16.52 2 20.16 2 24s.85 7.48 2.41 10.78l7.19-5.68"/><path fill="%23EA4335" d="M24 9.5c3.25 0 6.17 1.12 8.47 3.31l6.36-6.36C34.92 2.5 29.94.5 24 .5 15.32.5 7.66 3.3 4.41 8.22l7.19 5.68c1.74-5.25 6.63-9.15 12.4-9.15"/></svg>');
+        }
+
+        .error-message {
+            background: #ffe8e8;
+            color: #d32f2f;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #d32f2f;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        .features {
+            text-align: left;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .features h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .feature-item:before {
+            content: "✓";
+            color: #388e3c;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">📚</div>
+        <h1>RateMyProfessors Analyzer</h1>
+        <p class="subtitle">NYU Students Only</p>
+        <div class="nyu-badge">🎓 NYU Workspace Required</div>
+
+        <p class="description">
+            Analyze professor reviews and get AI-powered insights.
+            <br><br>
+            <strong>Sign in with your NYU email account to get started.</strong>
+        </p>
+
+        <div class="features">
+            <h3>What you can do:</h3>
+            <div class="feature-item">Search professors by course code</div>
+            <div class="feature-item">Analyze reviews with AI summaries</div>
+            <div class="feature-item">Export results as CSV</div>
+        </div>
+
+        <a href="/auth/google" class="login-btn">
+            <span class="google-icon"></span>
+            Sign in with Google
+        </a>
+
+        <div class="footer">
+            Only NYU workspace accounts (@nyu.edu) can access this application.
+        </div>
+    </div>
+</body>
+</html>
