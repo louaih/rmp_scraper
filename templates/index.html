@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RateMyProfessors Review Analyzer</title>
+    <title>RateMyProfessors Analyzer</title>
     <style>
         * {
             margin: 0;
@@ -12,14 +12,14 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
         }
 
@@ -32,7 +32,7 @@
         header h1 {
             font-size: 2.5em;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         header p {
@@ -40,431 +40,643 @@
             opacity: 0.9;
         }
 
-        .card {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            padding: 30px;
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
             margin-bottom: 30px;
         }
 
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            font-size: 1.3em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-header .icon {
+            font-size: 1.5em;
+        }
+
+        .card-content {
+            padding: 20px;
+        }
+
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         label {
             display: block;
             margin-bottom: 8px;
-            font-weight: 500;
+            font-weight: 600;
             color: #333;
         }
 
-        input[type="text"],
         textarea {
             width: 100%;
             padding: 12px;
             border: 2px solid #e0e0e0;
-            border-radius: 5px;
-            font-size: 1em;
-            font-family: inherit;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.95em;
+            resize: vertical;
+            min-height: 120px;
             transition: border-color 0.3s;
         }
 
-        input[type="text"]:focus,
         textarea:focus {
             outline: none;
             border-color: #667eea;
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 120px;
-        }
-
-        .help-text {
-            font-size: 0.9em;
-            color: #666;
-            margin-top: 5px;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .button-group {
             display: flex;
             gap: 10px;
-            margin-top: 20px;
+            flex-wrap: wrap;
         }
 
         button {
-            padding: 12px 24px;
-            font-size: 1em;
+            flex: 1;
+            padding: 12px 20px;
             border: none;
-            border-radius: 5px;
-            cursor: pointer;
+            border-radius: 8px;
+            font-size: 1em;
             font-weight: 600;
+            cursor: pointer;
             transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .btn-primary {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
 
-        .btn-primary:hover {
-            background: #5568d3;
+        .btn-primary:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-primary:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
         }
 
         .btn-secondary {
             background: #f0f0f0;
             color: #333;
+            border: 2px solid #e0e0e0;
         }
 
-        .btn-secondary:hover {
+        .btn-secondary:hover:not(:disabled) {
             background: #e0e0e0;
         }
 
-        .results-section {
-            margin-top: 30px;
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         .loading {
-            display: none;
-            text-align: center;
-            padding: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #667eea;
+            font-weight: 600;
         }
 
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #e0e0e0;
+            border-top-color: #667eea;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
+            animation: spin 0.6s linear infinite;
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            to { transform: rotate(360deg); }
         }
 
-        .result-item {
-            background: #f9f9f9;
-            border-left: 4px solid #667eea;
+        .results-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 5px;
         }
 
-        .result-item.error {
-            border-left-color: #ff6b6b;
-            background: #ffe0e0;
+        .results-section.hidden {
+            display: none;
         }
 
-        .result-header {
+        .results-header {
             display: flex;
             justify-content: space-between;
-            align-items: start;
-            margin-bottom: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 15px;
         }
 
-        .result-url {
-            font-weight: 600;
+        .results-header h2 {
             color: #333;
-            word-break: break-word;
-            flex: 1;
+            font-size: 1.5em;
         }
 
-        .result-badge {
+        .stat-badge {
             display: inline-block;
-            padding: 5px 12px;
+            background: #e8f0ff;
+            color: #667eea;
+            padding: 8px 16px;
             border-radius: 20px;
-            font-size: 0.85em;
             font-weight: 600;
+            font-size: 0.9em;
         }
 
-        .badge-success {
-            background: #d4edda;
-            color: #155724;
+        .stat-badge.error {
+            background: #ffe8e8;
+            color: #d32f2f;
         }
 
-        .badge-error {
-            background: #f8d7da;
-            color: #721c24;
+        .stat-badge.success {
+            background: #e8ffe8;
+            color: #388e3c;
         }
 
-        .result-stats {
+        .professor-result {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .professor-result:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+
+        .professor-result.error {
+            background: #fff5f5;
+            border-color: #ffcccc;
+        }
+
+        .professor-info {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: 1fr 1fr;
             gap: 15px;
             margin-bottom: 15px;
+            flex-wrap: wrap;
         }
 
-        .stat {
-            background: white;
-            padding: 15px;
-            border-radius: 5px;
-            text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        .info-item {
+            display: flex;
+            flex-direction: column;
         }
 
-        .stat-label {
+        .info-label {
             font-size: 0.85em;
-            color: #666;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             margin-bottom: 5px;
+            font-weight: 600;
         }
 
-        .stat-value {
-            font-size: 1.5em;
-            font-weight: 700;
-            color: #667eea;
-        }
-
-        .result-analysis {
-            background: white;
-            padding: 15px;
-            border-radius: 5px;
-            line-height: 1.6;
+        .info-value {
+            font-size: 1.1em;
             color: #333;
+            font-weight: 600;
+        }
+
+        .rating {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.95em;
+            font-weight: 600;
+        }
+
+        .rating.high {
+            background: #e8ffe8;
+            color: #388e3c;
+        }
+
+        .rating.medium {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .rating.low {
+            background: #ffe8e8;
+            color: #d32f2f;
+        }
+
+        .analysis-text {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 4px;
+            line-height: 1.6;
+            color: #555;
         }
 
         .error-message {
+            background: #ffe8e8;
             color: #d32f2f;
-            padding: 15px;
-            background: #ffebee;
-            border-radius: 5px;
+            padding: 12px 15px;
+            border-radius: 8px;
             margin-bottom: 15px;
+            border-left: 4px solid #d32f2f;
         }
 
-        .success-message {
-            color: #388e3c;
-            padding: 15px;
-            background: #e8f5e9;
-            border-radius: 5px;
-            margin-bottom: 15px;
+        .search-results {
+            margin-top: 15px;
         }
 
-        .no-results {
-            text-align: center;
-            padding: 40px 20px;
-            color: #999;
+        .professor-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
         }
 
-        footer {
-            text-align: center;
-            color: white;
-            margin-top: 40px;
-            opacity: 0.8;
+        .professor-item:hover {
+            background: #efefef;
         }
 
-        @media (max-width: 600px) {
+        .professor-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .professor-item label {
+            margin: 0;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
             header h1 {
                 font-size: 1.8em;
             }
 
-            .card {
-                padding: 20px;
-            }
-
-            .button-group {
-                flex-direction: column;
+            .professor-info {
+                grid-template-columns: 1fr;
             }
 
             button {
-                width: 100%;
+                flex-direction: column;
             }
+        }
+
+        .help-text {
+            font-size: 0.85em;
+            color: #999;
+            margin-top: 5px;
+            font-style: italic;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>📊 Professor Review Analyzer</h1>
-            <p>Analyze RateMyProfessors reviews with AI-powered insights</p>
+            <h1>📚 RateMyProfessors Analyzer</h1>
+            <p>Find professors and analyze their reviews automatically</p>
         </header>
 
-        <div class="card">
-            <h2>Analyze Professors</h2>
-            <form id="analyzeForm">
-                <div class="form-group">
-                    <label for="professorUrls">Professor URLs</label>
-                    <textarea 
-                        id="professorUrls" 
-                        placeholder="Paste RateMyProfessors professor URLs (one per line)&#10;Example: https://www.ratemyprofessors.com/professor/148929"
-                        required
-                    ></textarea>
-                    <p class="help-text">Enter one URL per line. URLs should be in the format: https://www.ratemyprofessors.com/professor/[ID]</p>
+        <div class="main-content">
+            <!-- Search by Course Code Tab -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="icon">🔍</span>
+                    <span>Search by Course Code</span>
                 </div>
+                <div class="card-content">
+                    <div class="form-group">
+                        <label for="course-codes">Enter Course Codes</label>
+                        <textarea id="course-codes" placeholder="CS101&#10;MATH201&#10;PHYS301"></textarea>
+                        <p class="help-text">One course code per line. e.g., CS101, MATH201, PHYS301</p>
+                    </div>
 
-                <div class="button-group">
-                    <button type="submit" class="btn-primary" id="analyzeBtn">Analyze</button>
-                    <button type="button" class="btn-secondary" id="clearBtn">Clear</button>
+                    <div class="button-group">
+                        <button class="btn-primary" onclick="searchProfessors()">Search Professors</button>
+                        <button class="btn-secondary" onclick="clearCourseSearch()">Clear</button>
+                    </div>
+
+                    <div id="search-status" style="margin-top: 15px;"></div>
+                    <div id="search-results" class="search-results"></div>
                 </div>
-            </form>
-        </div>
-
-        <div id="loadingSection" class="card loading">
-            <div class="spinner"></div>
-            <p>Analyzing professors... This may take a few minutes.</p>
-        </div>
-
-        <div id="resultsSection" class="card results-section" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2>Results</h2>
-                <button type="button" class="btn-secondary" id="exportBtn" style="display: none;">Export as CSV</button>
             </div>
-            <div id="resultsContainer"></div>
+
+            <!-- Direct Professor Input Tab -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="icon">👨‍🏫</span>
+                    <span>Direct Professor Input</span>
+                </div>
+                <div class="card-content">
+                    <div class="form-group">
+                        <label for="professor-input">Professor Names or URLs</label>
+                        <textarea id="professor-input" placeholder="https://www.ratemyprofessors.com/professor/...&#10;Or professor name"></textarea>
+                        <p class="help-text">One per line. Paste RateMyProfessors URLs or professor names</p>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn-primary" onclick="analyzeProfessors()">Analyze</button>
+                        <button class="btn-secondary" onclick="clearProfessorInput()">Clear</button>
+                    </div>
+
+                    <div id="direct-status" style="margin-top: 15px;"></div>
+                </div>
+            </div>
         </div>
 
-        <footer>
-            <p>&copy; 2025 Professor Review Analyzer. Built with Flask and OpenAI.</p>
-        </footer>
+        <!-- Results Section -->
+        <div id="results-container" class="results-section hidden">
+            <div class="results-header">
+                <h2>Analysis Results</h2>
+                <div>
+                    <button class="btn-primary" onclick="exportToCSV()" style="margin-right: 10px; flex: 0;">📥 Export CSV</button>
+                    <button class="btn-secondary" onclick="clearResults()" style="flex: 0;">Clear</button>
+                </div>
+            </div>
+
+            <div id="results-stats" style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                <div class="stat-badge">
+                    Professors Analyzed: <span id="stat-total">0</span>
+                </div>
+                <div class="stat-badge success">
+                    Successful: <span id="stat-success">0</span>
+                </div>
+                <div class="stat-badge error">
+                    Failed: <span id="stat-failed">0</span>
+                </div>
+            </div>
+
+            <div id="results-list"></div>
+        </div>
     </div>
 
     <script>
-        const form = document.getElementById('analyzeForm');
-        const clearBtn = document.getElementById('clearBtn');
-        const analyzeBtn = document.getElementById('analyzeBtn');
-        const loadingSection = document.getElementById('loadingSection');
-        const resultsSection = document.getElementById('resultsSection');
-        const resultsContainer = document.getElementById('resultsContainer');
-        const exportBtn = document.getElementById('exportBtn');
-        const urlsInput = document.getElementById('professorUrls');
+        let allResults = [];
 
-        let lastResults = [];
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const urls = urlsInput.value
+        async function searchProfessors() {
+            const courseCodes = document.getElementById('course-codes').value
                 .split('\n')
-                .map(u => u.trim())
-                .filter(u => u.length > 0);
+                .map(code => code.trim())
+                .filter(code => code.length > 0);
 
-            if (urls.length === 0) {
-                alert('Please enter at least one professor URL');
+            if (courseCodes.length === 0) {
+                alert('Please enter at least one course code');
                 return;
             }
 
-            // Hide results, show loading
-            resultsSection.style.display = 'none';
-            loadingSection.style.display = 'block';
-            analyzeBtn.disabled = true;
+            const statusDiv = document.getElementById('search-status');
+            const resultsDiv = document.getElementById('search-results');
+            statusDiv.innerHTML = '<div class="loading"><div class="spinner"></div> Searching for professors...</div>';
+            resultsDiv.innerHTML = '';
 
             try {
-                const response = await fetch('/api/analyze', {
+                const response = await fetch('/api/search-professors', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ professor_urls: urls })
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ course_codes: courseCodes })
                 });
 
                 const data = await response.json();
 
-                if (!response.ok) {
-                    throw new Error(data.error || 'Analysis failed');
+                if (response.ok && data.professors && data.professors.length > 0) {
+                    statusDiv.innerHTML = `<span class="stat-badge success">Found ${data.professors.length} professors</span>`;
+                    
+                    // Display professors with checkboxes
+                    let html = '';
+                    data.professors.forEach((prof, index) => {
+                        html += `
+                            <div class="professor-item">
+                                <input type="checkbox" id="prof-${index}" class="professor-checkbox" value="${prof.url}" data-name="${prof.professor_name}">
+                                <label for="prof-${index}">
+                                    <strong>${prof.professor_name}</strong> (${prof.course_code})
+                                    <br><small style="color: #999;">${prof.course_name || ''}</small>
+                                </label>
+                            </div>
+                        `;
+                    });
+                    
+                    html += `
+                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                            <button class="btn-primary" onclick="analyzeSelectedProfessors()" style="flex: 1;">Analyze Selected</button>
+                            <button class="btn-secondary" onclick="document.querySelectorAll('.professor-checkbox').forEach(cb => cb.checked = !cb.checked)" style="flex: 1;">Toggle All</button>
+                        </div>
+                    `;
+                    
+                    resultsDiv.innerHTML = html;
+                } else {
+                    statusDiv.innerHTML = `<div class="error-message">${data.error || 'No professors found for the given course codes'}</div>`;
                 }
-
-                lastResults = data.results;
-                displayResults(data);
             } catch (error) {
-                resultsContainer.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
-                resultsSection.style.display = 'block';
-            } finally {
-                loadingSection.style.display = 'none';
-                analyzeBtn.disabled = false;
+                statusDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
             }
-        });
+        }
 
-        clearBtn.addEventListener('click', () => {
-            urlsInput.value = '';
-            resultsSection.style.display = 'none';
-            lastResults = [];
-            urlsInput.focus();
-        });
+        async function analyzeSelectedProfessors() {
+            const selectedCheckboxes = document.querySelectorAll('.professor-checkbox:checked');
+            
+            if (selectedCheckboxes.length === 0) {
+                alert('Please select at least one professor');
+                return;
+            }
 
-        exportBtn.addEventListener('click', async () => {
+            const professorUrls = Array.from(selectedCheckboxes).map(cb => cb.value);
+            await analyzeProfessorUrls(professorUrls);
+        }
+
+        async function analyzeProfessors() {
+            const input = document.getElementById('professor-input').value
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+
+            if (input.length === 0) {
+                alert('Please enter at least one professor URL or name');
+                return;
+            }
+
+            // Filter for URLs (start with http)
+            const urls = input.filter(line => line.startsWith('http'));
+            
+            if (urls.length === 0) {
+                alert('Please enter valid RateMyProfessors URLs (starting with http)');
+                return;
+            }
+
+            await analyzeProfessorUrls(urls);
+        }
+
+        async function analyzeProfessorUrls(professorUrls) {
+            const directStatus = document.getElementById('direct-status');
+            const resultsContainer = document.getElementById('results-container');
+            
+            directStatus.innerHTML = '<div class="loading"><div class="spinner"></div> Analyzing professors...</div>';
+
             try {
-                const response = await fetch('/api/export', {
+                const response = await fetch('/api/analyze', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ results: lastResults })
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ professor_urls: professorUrls })
                 });
 
-                if (!response.ok) throw new Error('Export failed');
+                const data = await response.json();
 
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'professor_analyses.csv';
-                a.click();
+                if (response.ok && data.results) {
+                    allResults = data.results;
+                    displayResults(allResults);
+                    resultsContainer.classList.remove('hidden');
+                    directStatus.innerHTML = `<span class="stat-badge success">Analysis complete!</span>`;
+                } else {
+                    directStatus.innerHTML = `<div class="error-message">${data.error || 'Analysis failed'}</div>`;
+                }
             } catch (error) {
-                alert('Export failed: ' + error.message);
+                directStatus.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
             }
-        });
+        }
 
-        function displayResults(data) {
-            let html = `
-                <div class="success-message">
-                    Successfully analyzed ${data.successful_analyses}/${data.total_professors} professors
-                </div>
-            `;
+        function displayResults(results) {
+            const resultsList = document.getElementById('results-list');
+            const statTotal = document.getElementById('stat-total');
+            const statSuccess = document.getElementById('stat-success');
+            const statFailed = document.getElementById('stat-failed');
 
-            data.results.forEach(result => {
+            const successful = results.filter(r => r.status === 'success').length;
+            const failed = results.filter(r => r.status === 'error').length;
+
+            statTotal.textContent = results.length;
+            statSuccess.textContent = successful;
+            statFailed.textContent = failed;
+
+            let html = '';
+            results.forEach((result, index) => {
                 if (result.status === 'success') {
+                    const qualityRating = result.average_quality !== null 
+                        ? parseFloat(result.average_quality).toFixed(2) 
+                        : 'N/A';
+                    const difficultyRating = result.average_difficulty !== null 
+                        ? parseFloat(result.average_difficulty).toFixed(2) 
+                        : 'N/A';
+
+                    let qualityClass = 'medium';
+                    if (qualityRating >= 4) qualityClass = 'high';
+                    else if (qualityRating < 3) qualityClass = 'low';
+
+                    let difficultyClass = 'medium';
+                    if (difficultyRating >= 4) difficultyClass = 'high';
+                    else if (difficultyRating < 3) difficultyClass = 'low';
+
                     html += `
-                        <div class="result-item">
-                            <div class="result-header">
-                                <div class="result-url">${escapeHtml(result.url)}</div>
-                                <span class="result-badge badge-success">Success</span>
+                        <div class="professor-result">
+                            <div class="professor-info">
+                                <div class="info-item">
+                                    <span class="info-label">Professor</span>
+                                    <span class="info-value">${result.professor_name}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Number of Reviews</span>
+                                    <span class="info-value">${result.number_of_reviews}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Average Quality</span>
+                                    <span class="rating ${qualityClass}">${qualityRating}/5</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Average Difficulty</span>
+                                    <span class="rating ${difficultyClass}">${difficultyRating}/5</span>
+                                </div>
                             </div>
-                            <div class="result-stats">
-                                <div class="stat">
-                                    <div class="stat-label">Reviews</div>
-                                    <div class="stat-value">${result.number_of_reviews}</div>
-                                </div>
-                                <div class="stat">
-                                    <div class="stat-label">Quality</div>
-                                    <div class="stat-value">${(result.average_quality || 0).toFixed(1)}</div>
-                                </div>
-                                <div class="stat">
-                                    <div class="stat-label">Difficulty</div>
-                                    <div class="stat-value">${(result.average_difficulty || 0).toFixed(1)}</div>
-                                </div>
-                            </div>
-                            <div class="result-analysis">
-                                <strong>AI Analysis:</strong><br/>
-                                ${escapeHtml(result.analysis)}
+                            <div class="analysis-text">
+                                ${result.analysis || 'No analysis available'}
                             </div>
                         </div>
                     `;
                 } else {
                     html += `
-                        <div class="result-item error">
-                            <div class="result-header">
-                                <div class="result-url">${escapeHtml(result.url)}</div>
-                                <span class="result-badge badge-error">Error</span>
-                            </div>
-                            <div class="error-message">${escapeHtml(result.message)}</div>
+                        <div class="professor-result error">
+                            <strong>Error:</strong> ${result.message}
+                            <br><small>${result.url || ''}</small>
                         </div>
                     `;
                 }
             });
 
-            resultsContainer.innerHTML = html;
-            resultsSection.style.display = 'block';
-            exportBtn.style.display = 'inline-block';
+            resultsList.innerHTML = html;
         }
 
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+        async function exportToCSV() {
+            try {
+                const response = await fetch('/api/export', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ results: allResults })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'professor_analyses.csv';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } else {
+                    alert('Failed to export CSV');
+                }
+            } catch (error) {
+                alert('Error exporting CSV: ' + error.message);
+            }
+        }
+
+        function clearResults() {
+            allResults = [];
+            document.getElementById('results-container').classList.add('hidden');
+            document.getElementById('results-list').innerHTML = '';
+        }
+
+        function clearCourseSearch() {
+            document.getElementById('course-codes').value = '';
+            document.getElementById('search-status').innerHTML = '';
+            document.getElementById('search-results').innerHTML = '';
+        }
+
+        function clearProfessorInput() {
+            document.getElementById('professor-input').value = '';
+            document.getElementById('direct-status').innerHTML = '';
         }
     </script>
 </body>

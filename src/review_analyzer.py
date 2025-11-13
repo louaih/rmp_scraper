@@ -25,19 +25,21 @@ class ReviewScraper:
         if not api_key:
             raise ValueError("OpenAI API key not found in environment variables")
         try:
-            # Initialize OpenAI client. Newer SDKs prefer using the Responses API.
-            # Keep the explicit api_key here for clarity, but the SDK will also
-            # pick it up from the OPENAI_API_KEY env var if present.
+            # Initialize OpenAI client
             self.openai_client = OpenAI(api_key=api_key)
 
-            # Test API access using the Responses API (more future-proof).
-            test_resp = self.openai_client.responses.create(
+            # Test API access
+            test_resp = self.openai_client.chat.completions.create(
                 model="gpt-3.5-turbo",
-                input="test"
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": "Hello"}
+                ],
+                max_tokens=10
             )
 
             # Basic check for a valid response
-            if not test_resp:
+            if not test_resp or not test_resp.choices:
                 raise ValueError("Empty response from OpenAI during initialization")
 
             logging.info("Successfully initialized OpenAI client with valid API access")
@@ -255,54 +257,21 @@ class ReviewScraper:
         
         for attempt in range(max_retries):
             try:
-                # Use the Responses API which is the newer, unified API surface.
-                # Provide system + user as a list for structured input.
-                response = self.openai_client.responses.create(
+                # Use the chat completions API
+                response = self.openai_client.chat.completions.create(
                     model="gpt-3.5-turbo",
-                    input=[
+                    messages=[
                         {"role": "system", "content": "You are an educational analyst summarizing professor reviews."},
                         {"role": "user", "content": prompt}
                     ],
-                    max_output_tokens=300
+                    max_tokens=300
                 )
 
-                # Parse the response robustly. Different SDK versions expose
-                # the generated text in different places.
-                # Preferred: response.output_text (convenience property)
-                if hasattr(response, "output_text") and response.output_text:
-                    return response.output_text
-
-                # Common structured form: response.output is a list of objects
-                # containing a 'content' list where text pieces live.
-                if getattr(response, "output", None):
-                    try:
-                        for item in response.output:
-                            if getattr(item, "content", None):
-                                for c in item.content:
-                                    # content element may contain 'text' or 'parts'
-                                    if isinstance(c, dict) and c.get("type") == "output_text":
-                                        text = c.get("text") or c.get("content")
-                                        if text:
-                                            return text
-                                    # Some SDKs provide a simple 'text' key
-                                    if isinstance(c, dict) and c.get("text"):
-                                        return c.get("text")
-                                    # Fallback: direct string
-                                    if isinstance(c, str):
-                                        return c
-                    except Exception:
-                        pass
-
-                # Final fallback: inspect choices (older shape)
-                if getattr(response, "choices", None):
-                    try:
-                        choice = response.choices[0]
-                        if getattr(choice, "message", None):
-                            return choice.message.get("content") or choice.message.get("content", {}).get("text")
-                        if getattr(choice, "text", None):
-                            return choice.text
-                    except Exception:
-                        pass
+                # Extract the text from the response
+                if response.choices and len(response.choices) > 0:
+                    choice = response.choices[0]
+                    if hasattr(choice, 'message') and hasattr(choice.message, 'content'):
+                        return choice.message.content
 
                 # If we reach here, we couldn't extract text
                 logging.error("Unable to parse text from OpenAI response object")
